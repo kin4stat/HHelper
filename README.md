@@ -1,4 +1,4 @@
-# HHelper
+# HHelper (x86)
 
 A lightweight single header library for easier hooking 
 

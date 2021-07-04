@@ -30,6 +30,13 @@ void InstallWndProcHook() {
     helper.PushBytesRightBeforeCall(m_pWindowProc);
 }
 ```
+```
+Output:
+
+jmp 01C42C0A
+jmp 01910FE0
+jmp ASIPlugin.asi+11168
+```
 
 ```cpp
 WNDPROC m_pWindowProc;
@@ -51,4 +58,17 @@ void InstallWndProcHook() {
     helper.PushBytesBeforeCall(Pushes, push_size);
     helper.PushBytesBeforeCall(m_pWindowProc);
 }
+```
+```
+Output:
+
+jmp 132EC420
+push [esp+10]
+push [esp+10]
+push [esp+10]
+push [esp+10]
+push ___mainthing.asi+2430
+call USER32.CallWindowProcA
+ret 
+jmp ASIPlugin.asi+113E8
 ```

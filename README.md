@@ -21,6 +21,22 @@ WNDPROC m_pWindowProc;
 LRESULT __stdcall WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return CallWindowProcA(m_pWindowProc, hWnd, msg, wParam, lParam);
 }
+
+void InstallWndProcHook() {
+    static HookHelper helper(&WndProcHandler, CallType::JMP, CallType::CALL);
+    m_pWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongW(hWnd, GWL_WNDPROC, reinterpret_cast<LONG>(helper.GetInstructionPointer())));
+    helper.SetTrampoline(GetProcAddress(GetModuleHandleA("user32.dll"), "CallWindowProcA"), CallWindowProcA, 1);
+    helper.PushBytesRightBeforeCall('\x68'); // Opcode::PUSH
+    helper.PushBytesRightBeforeCall(m_pWindowProc);
+}
+```
+
+```cpp
+WNDPROC m_pWindowProc;
+
+LRESULT __stdcall WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    return CallWindowProcA(m_pWindowProc, hWnd, msg, wParam, lParam);
+}
 void InstallWndProcHook() {
     const char Pushes[] = { 
         "\xFF\x74\x24\x10" // push [esp + 0x10]
@@ -29,10 +45,11 @@ void InstallWndProcHook() {
         "\xFF\x74\x24\x10" // push [esp + 0x10]
         "\x68" }; // push
     auto push_size = sizeof(Pushes) - 1;
-    static HookHelper helper(&WndProcHandler,  push_size + 5, Pushes, push_size, CallType::JMP, CallType::CALL);
-    auto HandlerPointer = reinterpret_cast<LONG>(helper.GetInstructionPointer()));
-    m_pWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongW(hWnd, GWL_WNDPROC, HandlerPointer);
-    helper.SetAdditionalBytes(m_pWindowProc);
+    static HookHelper helper(&WndProcHandler, CallType::JMP, CallType::CALL);
+    m_pWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongW(**reinterpret_cast<HWND**>(0xC17054), GWL_WNDPROC, reinterpret_cast<LONG>(helper.GetInstructionPointer())));
     helper.SetTrampoline(GetProcAddress(GetModuleHandleA("user32.dll"), "CallWindowProcA"));
+    helper.PushBytesBeforeCall(Pushes, push_size);
+    helper.PushBytesBeforeCall(m_pWindowProc);
 }
 ```
+

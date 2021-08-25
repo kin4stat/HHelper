@@ -7,7 +7,7 @@
 
 #include <cstring> // Memory operations
 #include <windows.h>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <stdlib.h>
 #define ALIGNED_ALLOC(a, s) _aligned_malloc(s, a)
 #else
